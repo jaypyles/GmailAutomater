@@ -4,7 +4,9 @@ name = "GmailAutomater"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Jayden Pyles", email = "jpylesbusiness@gmail.com" }]
-dependencies = []
+dependencies = [
+    "imaplib2>=3.6",
+]
 requires-python = ">=3.10"
 license = { text = "MIT" }
 
