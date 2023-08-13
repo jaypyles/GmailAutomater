@@ -1,0 +1,21 @@
+version: "3"
+services:
+  app:
+    build:
+      dockerfile: ./src/gmailautomater/Dockerfile
+    depends_on:
+      - sqlite3
+  sqlite3:
+    container_name: sqlite3_container
+    build:
+      dockerfile: ./sqlite-db/Dockerfile
+    stdin_open: true
+    tty: true
+    volumes:
+      - "db-data:/root/db"
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+volumes:
+  db-data:
