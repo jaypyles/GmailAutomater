@@ -1,12 +1,37 @@
 # STL
 import re
 import email
+import logging
 from typing import List
+from imaplib import IMAP4_SSL
 from email.header import decode_header
+
+# LOCAL
+from gmailautomater.mail.Email import Email, EmailName
+from gmailautomater.email_utils.labels import check_email_for_move
+from gmailautomater.email_utils.deletion import (
+    mark_email_for_deletion,
+    check_email_for_deletion,
+)
+from gmailautomater.sqlite.DatabaseFunctions import (
+    retrieve_emails_from_db,
+    retrieve_labels_from_db,
+)
+
+LOG = logging.getLogger()
+
+
+def organize_inbox(mail: IMAP4_SSL, emails: list[Email], delete_list: list[EmailName]):
+    labels = retrieve_labels_from_db()
+    for email in emails:
+        if check_email_for_deletion(email, delete_list):
+            mark_email_for_deletion(mail, email)
+        # Move emails where they go based on their sender
+    mail.expunge()
 
 
 def decode_email_from(header):
-    "Convert a utf-8 encoded header, into a string representing the email address from"
+    "Convert a utf-8 encoded header, into a string representing the email address sender."
     if isinstance(header, list):
         decoded_header = str(decode_header(header)[1][0])
         email_address = re.search(r"<(.*?)>", decoded_header)[1]
@@ -18,8 +43,8 @@ def decode_email_from(header):
     return header
 
 
-def get_emails(mail, email_id_list: list) -> List[tuple]:
-    "From a list of email ids, return a list of tuples (subject, from, email_id)"
+def get_emails(mail, email_id_list: list) -> List[Email]:
+    "From a list of email ids, return a list of emails."
     emails = []
     for email_id in email_id_list[0:20]:
         _, email_data = mail.fetch(email_id, "(RFC822)")
@@ -38,6 +63,8 @@ def get_emails(mail, email_id_list: list) -> List[tuple]:
 
         from_email = decode_email_from(from_email)
 
-        emails.append((subject, from_email, int(email_id.decode("utf-8"))))
+        e = Email(subject, from_email, email_id.decode("utf-8"))
+
+        emails.append((e))
 
     return emails
