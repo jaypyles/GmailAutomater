@@ -3,18 +3,14 @@ import os
 import imaplib
 import logging
 
-# PDM
-from dotenv import load_dotenv
-
 # LOCAL
-from gmailautomater.email_utils.utils import get_emails, organize_inbox
+from gmailautomater.email_utils.utils import get_emails
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
 
 
 def organize_mail():
-    load_dotenv()
     mail = imaplib.IMAP4_SSL("imap.gmail.com")
 
     EMAIL, PASSWORD = os.getenv("USER_EMAIL"), os.getenv("APP_PASSWORD")

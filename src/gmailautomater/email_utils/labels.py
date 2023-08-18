@@ -4,9 +4,30 @@ from imaplib import IMAP4_SSL
 
 # LOCAL
 from gmailautomater.mail.Email import Email, EmailName
+from gmailautomater.email_utils.mail import connect_to_mail
 from gmailautomater.sqlite.DatabaseFunctions import retrieve_emails_from_db
 
 LOG = logging.getLogger()
+
+
+def create_label_in_db():
+    pass
+
+
+def add_label_to_db():
+    pass
+
+
+def add_label_to_email(label: str):
+    """Add label to email."""
+    if mail := connect_to_mail():
+        result, _ = mail.create(label)
+        if result == "OK":
+            LOG.info(f"Label created in inbox: {label}.")
+        else:
+            LOG.error(f"Failed to create label: {label}.")
+
+        mail.logout()
 
 
 def check_email_for_move(email: Email, label_email_list: list[EmailName]):

@@ -5,12 +5,12 @@ name = "gmailautomater"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Jayden Pyles", email = "jpylesbusiness@gmail.com" }]
-dependencies = ["python-dotenv>=1.0.0", "click>=8.1.7"]
+dependencies = ["python-dotenv", "click>=8.1.7"]
 requires-python = ">=3.10"
 license = { text = "MIT" }
 
-[tool.pdm.scripts]
-gmailautomater = "gmailautomater.__main__:cli"
+[project.scripts]
+gmailautomater = "gmailautomater.__main__:main"
 
 [tool.pyright]
 include = ["src"]

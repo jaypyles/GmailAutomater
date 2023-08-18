@@ -26,7 +26,7 @@ summary = "Read key-value pairs from a .env file and set them as environment var
 lock_version = "4.2"
 cross_platform = true
 groups = ["default"]
-content_hash = "sha256:e3e095abfe7a8a7325d9b3af678a80736b49f19ce1c38410ef2154e84b2948a6"
+content_hash = "sha256:aa1344a5d2b1016eb1346b804b63d45f7a6155995ff7e1fccf5352c265e004b5"
 
 [metadata.files]
 "click 8.1.7" = [
