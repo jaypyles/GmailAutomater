@@ -35,7 +35,8 @@ def retrieve_labels_from_db():
 def retrieve_emails_from_db(table_name: str) -> list[EmailName]:
     """Retrieve a list of email names from a table in the db."""
     conn = sqlite3.connect("sqlite-db/data/gmail.db")
-    query = f"SELECT sender FROM {table_name}"
+    query = f"SELECT sender FROM `{table_name}`"
+    LOG.info(query)
     rows = query_db(conn, query)
     return [email[0] for email in rows]
 
