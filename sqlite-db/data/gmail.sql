@@ -7,24 +7,40 @@ CREATE TABLE
   );
 
 CREATE TABLE
-  IF NOT EXISTS delete_emails (
+  IF NOT EXISTS labels (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE);
+
+CREATE TABLE
+  IF NOT EXISTS Transactions (
     id INTEGER PRIMARY KEY,
     sender TEXT NOT NULL UNIQUE
   );
 
 CREATE TABLE
-  IF NOT EXISTS labels (
-    id INTEGER PRIMARAY KEY,
-    name TEXT NOT NULL UNIQUE
+  IF NOT EXISTS deletion (
+    id INTEGER PRIMARY KEY,
+    sender TEXT NOT NULL UNIQUE
+  );
+
+CREATE TABLE
+  IF NOT EXISTS BillEmails (
+    id INTEGER PRIMARY KEY,
+    sender TEXT NOT NULL UNIQUE
   );
 
 INSERT INTO
-  delete_emails (sender)
+  deletion (sender)
 VALUES
-  ('vfe-campaign-response@amazon.com'),
+  ('partner-news@reply.spreadshirt.com'),
+  ('jane@example.com');
+
+INSERT INTO
+  Transactions (sender)
+VALUES
   ('jane@example.com');
 
 INSERT INTO
   labels (name)
 VALUES
-  ('Transactions');
+  ('Transactions'),
+  ('deletion'),
+  ('BillEmails');

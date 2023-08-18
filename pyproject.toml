@@ -1,14 +1,16 @@
+[tool.pdm]
 
 [project]
-name = "GmailAutomater"
+name = "gmailautomater"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Jayden Pyles", email = "jpylesbusiness@gmail.com" }]
-dependencies = [
-    "python-dotenv>=1.0.0",
-]
+dependencies = ["python-dotenv>=1.0.0", "click>=8.1.7"]
 requires-python = ">=3.10"
 license = { text = "MIT" }
+
+[tool.pdm.scripts]
+gmailautomater = "gmailautomater.__main__:cli"
 
 [tool.pyright]
 include = ["src"]
@@ -32,3 +34,8 @@ import_heading_stdlib = "STL"
 import_heading_thirdparty = "PDM"
 import_heading_firstparty = "LOCAL"
 import_heading_localfolder = "LOCAL"
+
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
