@@ -5,6 +5,6 @@ This works by using the Gmail IMAP server with Python and a SQLite DB to do this
 
 # TODO
 
-- [ ] Edit login credentials via CLI
+- [x] Edit login credentials via CLI
 - [ ] Add and delete labels from inbox
 - [ ] Add emails to labels

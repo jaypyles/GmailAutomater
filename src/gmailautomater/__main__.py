@@ -3,6 +3,7 @@ import click
 from dotenv import load_dotenv
 
 # LOCAL
+from gmailautomater.email_utils.login import create_env, store_email, store_app_password
 from gmailautomater.email_utils.labels import add_label_to_email
 
 # LOCAL
@@ -19,6 +20,16 @@ def cli():
 def organize():
     """Run the organize_inbox command."""
     organize_mail()
+
+
+@cli.command()
+@click.argument("email", required=True)
+@click.argument("app_password", required=True)
+def set_credentials(email: str, app_password: str):
+    """Set email to be used, along with Gmail 2FA App Password."""
+    create_env()
+    store_email(email)
+    store_app_password(app_password)
 
 
 @cli.command()
