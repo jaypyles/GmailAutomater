@@ -54,7 +54,7 @@ def decode_email_from(header):
     return header
 
 
-def get_emails(mail, email_id_list: list, last_checked) -> List[Email]:
+def get_emails(mail, email_id_list: list, all: bool) -> List[Email]:
     "From a list of email ids, return a list of emails."
     emails = []
     for email_id in email_id_list:
@@ -66,14 +66,18 @@ def get_emails(mail, email_id_list: list, last_checked) -> List[Email]:
         LOG.error(f"MSG recieved: {msg.get('Received')}")
 
         # Decode the email subject
-        subject, charset = decode_header(msg["Subject"])[0]
-        if isinstance(subject, bytes):
-            if charset == "unknown-8bit":
-                continue
-            else:
-                subject = subject.decode(
-                    charset if charset else "utf-8", errors="replace"
-                )
+        sub = msg["Subject"]
+        if isinstance(sub, str) or isinstance(sub, bytes):
+            subject, charset = decode_header(msg["Subject"])[0]
+            if isinstance(subject, bytes):
+                if charset == "unknown-8bit":
+                    continue
+                else:
+                    subject = subject.decode(
+                        charset if charset else "utf-8", errors="replace"
+                    )
+        else:
+            subject = ""
 
         # Get the sender's email address
         from_email = msg.get("From")
@@ -94,5 +98,6 @@ def get_emails(mail, email_id_list: list, last_checked) -> List[Email]:
         emails.append(e)
 
     # update the day of last checked
-    insert_last_checked(emails[0].date)
+    if not all:
+        insert_last_checked(emails[0].date)
     return emails

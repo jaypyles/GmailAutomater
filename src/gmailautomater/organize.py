@@ -40,7 +40,7 @@ def organize_mail(all: bool):
     _, email_ids = mail.search(None, QUERY)
 
     email_id_list = email_ids[0].split()
-    emails = get_emails(mail, email_id_list, last_checked)
+    emails = get_emails(mail, email_id_list, all)
     organize_inbox(mail, emails)
 
     mail.logout()
