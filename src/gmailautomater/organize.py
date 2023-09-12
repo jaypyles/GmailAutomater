@@ -17,6 +17,8 @@ def organize_mail():
 
     if EMAIL and PASSWORD:
         mail.login(EMAIL, PASSWORD)
+    else:
+        LOG.error("Email and password not defined.")
 
     mail.select('"[Gmail]/All Mail"')
 
