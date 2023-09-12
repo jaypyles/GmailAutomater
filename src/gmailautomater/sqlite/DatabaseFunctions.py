@@ -49,7 +49,7 @@ def insert_last_checked(date):
     """Insert the date of the last checked email."""
     conn = connect_to_db()
     query = f"""
-    INSERT OR REPLACE INTO last_checked (id, checked_date)
+    INSERT OR REPLACE INTO last_checked (id, check_date)
     VALUES (1, {date});
     """
     execute_db(conn, query)
