@@ -15,7 +15,10 @@ from gmailautomater.email_utils.labels import (
     build_email_label_trie,
 )
 from gmailautomater.email_utils.deletion import mark_email_for_deletion
-from gmailautomater.sqlite.DatabaseFunctions import retrieve_labels_from_db
+from gmailautomater.sqlite.DatabaseFunctions import (
+    insert_last_checked,
+    retrieve_labels_from_db,
+)
 
 LOG = logging.getLogger()
 
@@ -77,13 +80,19 @@ def get_emails(mail, email_id_list: list, last_checked) -> List[Email]:
         from_email = decode_email_from(from_email)
 
         # Get the date of sent
-        DATE_PATTERN =
+        DATE_PATTERN = (
+            r"([0-9]*\ (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\ [0-9]*)"
+        )
+        date = re.search(DATE_PATTERN, msg.get("Received"))[0]
+        split_date = date.split()
+        date = "-".join(split_date)
 
-        date = msg.get("Received")
-
+        # Make email object
         e = Email(subject, from_email, email_id.decode("utf-8"), date)
         LOG.debug(f"Email made: {e}.")
 
         emails.append(e)
 
+    # update the day of last checked
+    insert_last_checked(emails[0].date)
     return emails
