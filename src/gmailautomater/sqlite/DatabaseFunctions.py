@@ -1,7 +1,7 @@
 # STL
 import logging
 import sqlite3
-from sqlite3 import Connection
+from sqlite3 import Connection, connect
 
 # LOCAL
 from gmailautomater.mail.Email import EmailName
@@ -30,6 +30,29 @@ def execute_db(conn: Connection, query: str):
     cursor.execute(query)
     conn.commit()
     conn.close()
+
+
+def get_last_checked():
+    """Get the date of the last checked email."""
+    conn = connect_to_db()
+    query = f"""
+    SELECT check_date FROM last_checked;
+    """
+    rows = query_db(conn, query)
+    if len(rows) == 0:
+        return None
+    else:
+        return rows[0]
+
+
+def insert_last_checked(date):
+    """Insert the date of the last checked email."""
+    conn = connect_to_db()
+    query = f"""
+    INSERT OR REPLACE INTO last_checked (id, checked_date)
+    VALUES (1, {date});
+    """
+    execute_db(conn, query)
 
 
 def delete_label_table(label: str):

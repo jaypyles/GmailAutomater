@@ -51,7 +51,7 @@ def decode_email_from(header):
     return header
 
 
-def get_emails(mail, email_id_list: list) -> List[Email]:
+def get_emails(mail, email_id_list: list, last_checked) -> List[Email]:
     "From a list of email ids, return a list of emails."
     emails = []
     for email_id in email_id_list:
@@ -60,6 +60,7 @@ def get_emails(mail, email_id_list: list) -> List[Email]:
 
         # Parse the raw email data
         msg = email.message_from_bytes(raw_email)
+        LOG.error(f"MSG recieved: {msg.get('Received')}")
 
         # Decode the email subject
         subject, charset = decode_header(msg["Subject"])[0]
@@ -75,7 +76,12 @@ def get_emails(mail, email_id_list: list) -> List[Email]:
         from_email = msg.get("From")
         from_email = decode_email_from(from_email)
 
-        e = Email(subject, from_email, email_id.decode("utf-8"))
+        # Get the date of sent
+        DATE_PATTERN =
+
+        date = msg.get("Received")
+
+        e = Email(subject, from_email, email_id.decode("utf-8"), date)
         LOG.debug(f"Email made: {e}.")
 
         emails.append(e)

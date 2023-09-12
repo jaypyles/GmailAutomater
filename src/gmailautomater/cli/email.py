@@ -30,9 +30,10 @@ def email():
 
 
 @email.command()
-def organize():
+@click.option("--all", is_flag=True)
+def organize(all):
     """Run the organize_inbox command."""
-    organize_mail()
+    organize_mail(all=all)
 
 
 @email.command()
