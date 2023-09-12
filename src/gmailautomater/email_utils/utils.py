@@ -67,6 +67,7 @@ def get_emails(mail, email_id_list: list, all: bool) -> List[Email]:
 
         # Decode the email subject
         sub = msg["Subject"]
+        LOG.debug(f"Message Subject Class: {sub.__class__}")
         if isinstance(sub, str) or isinstance(sub, bytes):
             subject, charset = decode_header(msg["Subject"])[0]
             if isinstance(subject, bytes):
