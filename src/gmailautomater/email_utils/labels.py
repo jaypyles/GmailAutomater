@@ -1,5 +1,8 @@
 # STL
+import re
+import email
 import logging
+from time import sleep
 from imaplib import IMAP4_SSL
 
 # LOCAL
@@ -10,12 +13,16 @@ from gmailautomater.sqlite.DatabaseFunctions import retrieve_emails_from_db
 LOG = logging.getLogger()
 
 
-def create_label_in_db():
-    pass
+def remove_label_from_email(label: str):
+    """Remove label from Gmail."""
+    if mail := connect_to_mail():
+        result, _ = mail.delete(label)
+        if result == "OK":
+            LOG.info(f"Label deleted from inbox: {label}.")
+        else:
+            LOG.error(f"Failed to delete label: {label}.")
 
-
-def add_label_to_db():
-    pass
+        mail.logout()
 
 
 def add_label_to_email(label: str):
@@ -23,11 +30,25 @@ def add_label_to_email(label: str):
     if mail := connect_to_mail():
         result, _ = mail.create(label)
         if result == "OK":
-            LOG.info(f"Label created in inbox: {label}.")
+            LOG.debug(f"Label created in inbox: {label}.")
         else:
-            LOG.error(f"Failed to create label: {label}.")
+            LOG.debug(f"Failed to create label: {label}.")
 
         mail.logout()
+
+
+def check_if_label_exists(label: str):
+    """Check if a label exists in a mailbox."""
+    if mail := connect_to_mail():
+        response, labels = mail.list()
+        if response == "OK":
+            for lbl in labels:
+                if isinstance(lbl, bytes):
+                    if label in lbl.decode():
+                        return True
+            return False
+        else:
+            return False
 
 
 def check_email_for_move(email: Email, label_email_list: list[EmailName]):
@@ -35,17 +56,33 @@ def check_email_for_move(email: Email, label_email_list: list[EmailName]):
     return email.sender in label_email_list
 
 
-def move_email_to_label(mail: IMAP4_SSL, email: Email, label):
+def move_email_to_label(mail: IMAP4_SSL, e: Email, label):
     """Move email from main inbox to a label."""
-    copy_result = mail.copy(str(email.id), label)
-    if copy_result[0] != "OK":
-        LOG.warning("Failed to move email to label.")
-        return
-    else:
-        LOG.info(f"Email: {str(email.id)}, moved to label: {label}")
 
-    mail.store(str(email.id), "+FLAGS", "\\Deleted")
-    mail.expunge()
+    _, email_data = mail.fetch(str(e.id), "(RFC822)")
+    LOG.debug(f"Email Data: {email_data.__class__}")
+    raw_email = email_data[0][1]
+
+    if isinstance(raw_email, bytes):
+        msg = email.message_from_bytes(raw_email)
+    else:
+        return
+
+    sender = msg.get("From")
+    email_address = re.search(r"<(.*?)>", str(sender))
+    if email_address:
+        sender = email_address[1]
+
+    # Remove the "Inbox" label
+    if e.sender == sender:
+        mail.store(str(e.id), "+X-GM-LABELS", label)
+        sleep(
+            1
+        )  # Fix weird error where the server wouldn't update and it would move the wrong id
+        mail.store(str(e.id), "-X-GM-LABELS", "\\Inbox")
+        mail.expunge()
+    else:
+        pass
 
 
 def build_label_map(labels: list):

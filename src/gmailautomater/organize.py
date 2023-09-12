@@ -4,9 +4,9 @@ import imaplib
 import logging
 
 # LOCAL
-from gmailautomater.email_utils.utils import get_emails
+from gmailautomater.email_utils.utils import get_emails, organize_inbox
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 LOG = logging.getLogger()
 
 
@@ -18,14 +18,13 @@ def organize_mail():
     if EMAIL and PASSWORD:
         mail.login(EMAIL, PASSWORD)
 
-    mail.select("inbox")
+    mail.select('"[Gmail]/All Mail"')
 
-    # Search for all emails
-    _, email_ids = mail.search(None, "NOT FLAGGED")
-    email_id_list = email_ids[0].split()
+    # only emails in the primary section
+    _, email_ids = mail.search(None, 'X-GM-LABELS "inbox" SEEN NOT FLAGGED')
+
+    email_id_list = email_ids[0].split()[::-1]
     emails = get_emails(mail, email_id_list)
-    for email in emails:
-        print(email.sender)
-    # organize_inbox(mail, emails)
+    organize_inbox(mail, emails)
 
     mail.logout()

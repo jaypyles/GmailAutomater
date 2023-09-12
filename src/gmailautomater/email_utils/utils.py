@@ -30,11 +30,12 @@ def organize_inbox(mail: IMAP4_SSL, emails: list[Email]):
     for label, email_list in categorized_emails.items():
         if label == "deletion":
             for email in email_list:
+                LOG.debug(f"Deleted email: {email}")
                 mark_email_for_deletion(mail, email)
         else:
             for email in email_list:
+                LOG.debug(f"Moved email: {email}")
                 move_email_to_label(mail, email, label)
-    mail.expunge()
 
 
 def decode_email_from(header):
@@ -53,7 +54,7 @@ def decode_email_from(header):
 def get_emails(mail, email_id_list: list) -> List[Email]:
     "From a list of email ids, return a list of emails."
     emails = []
-    for email_id in email_id_list[0:20]:
+    for email_id in email_id_list:
         _, email_data = mail.fetch(email_id, "(RFC822)")
         raw_email = email_data[0][1]
 
@@ -63,7 +64,12 @@ def get_emails(mail, email_id_list: list) -> List[Email]:
         # Decode the email subject
         subject, charset = decode_header(msg["Subject"])[0]
         if isinstance(subject, bytes):
-            subject = subject.decode(charset if charset else "utf-8", errors="replace")
+            if charset == "unknown-8bit":
+                continue
+            else:
+                subject = subject.decode(
+                    charset if charset else "utf-8", errors="replace"
+                )
 
         # Get the sender's email address
         from_email = msg.get("From")

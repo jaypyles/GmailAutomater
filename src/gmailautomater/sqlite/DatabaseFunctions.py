@@ -24,6 +24,69 @@ def query_db(conn: Connection, query: str):
     return rows
 
 
+def execute_db(conn: Connection, query: str):
+    """Execute a command in the db."""
+    cursor = conn.cursor()
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+
+
+def delete_label_table(label: str):
+    """Delete the table for the label."""
+    conn = connect_to_db()
+    query = f"""
+    DROP TABLE {label};
+    """
+    execute_db(conn, query)
+
+
+def remove_label_from_labels(label: str):
+    """Remove a label from the label table."""
+    conn = connect_to_db()
+    query = f"""
+    DELETE FROM labels
+    WHERE name = '{label}';
+    """
+    execute_db(conn, query)
+
+
+def add_email_to_label(label: str, email: str):
+    """Add a email to be sorted into a label."""
+    conn = connect_to_db()
+    query = f"""
+    INSERT INTO {label} (sender)
+    VALUES
+    ('{email}');
+    """
+    execute_db(conn, query)
+
+
+def add_label_to_db(label_name: str):
+    """Add a new label to the db."""
+    conn = connect_to_db()
+    query = f"""
+    CREATE TABLE
+    IF NOT EXISTS {label_name} (
+        id INTEGER PRIMARY KEY,
+        sender TEXT NOT NULL UNIQUE
+    );
+    """
+    execute_db(conn, query)
+
+
+def add_label_to_table(label_name: str):
+    """Add a label to the labels table in the db."""
+    conn = connect_to_db()
+    query = f"""
+    INSERT INTO
+    labels (name)
+    VALUES
+    ('{label_name}');
+    """
+    execute_db(conn, query)
+
+
 def retrieve_labels_from_db():
     """Retrieve a list of label names from the db."""
     conn = connect_to_db()

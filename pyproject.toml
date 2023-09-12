@@ -1,11 +1,14 @@
-[tool.pdm]
-
 [project]
 name = "gmailautomater"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Jayden Pyles", email = "jpylesbusiness@gmail.com" }]
-dependencies = ["python-dotenv", "click>=8.1.7"]
+dependencies = [
+    "python-dotenv",
+    "click>=8.1.7",
+    "rich>=13.5.2",
+    "imap-tools>=1.2.0",
+]
 requires-python = ">=3.10"
 license = { text = "MIT" }
 

@@ -12,7 +12,8 @@ def check_email_for_deletion(email: Email, delete_list: list[EmailName]):
 
 def mark_email_for_deletion(mail: IMAP4_SSL, email: Email):
     """Mark an email for deletion."""
-    mail.store(str(email.id), "+FLAGS", "\\Deleted")
+    mail.store(str(email.id), "+X-GM-LABELS", "\\Trash")
+    mail.store(str(email.id), "-X-GM-LABELS", "\\All Mail")
 
 
 def delete_emails(mail: IMAP4_SSL, emails: list[Email], delete_list: list[EmailName]):
