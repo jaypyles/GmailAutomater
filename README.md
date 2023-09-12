@@ -10,5 +10,5 @@ Install the library using `pipx install .`
 # TODO
 
 - [x] Edit login credentials via CLI
-- [ ] Add and delete labels from inbox
-- [ ] Add emails to labels
+- [x] Add and delete labels from inbox
+- [x] Add emails to labels
