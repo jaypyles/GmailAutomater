@@ -76,6 +76,7 @@ def get_emails(mail, email_id_list: list) -> List[Email]:
         from_email = decode_email_from(from_email)
 
         e = Email(subject, from_email, email_id.decode("utf-8"))
+        LOG.debug(f"Email made: {e}.")
 
         emails.append(e)
 
