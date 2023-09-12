@@ -21,7 +21,7 @@ cli.add_command(email)
 
 
 def main():
-    load_dotenv()
+    load_dotenv(dotenv_path=".env")
     cli()
 
 
