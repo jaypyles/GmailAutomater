@@ -57,7 +57,7 @@ def decode_email_from(header):
 def get_emails(mail, email_id_list: list, all: bool) -> List[Email]:
     "From a list of email ids, return a list of emails."
     emails = []
-    for email_id in email_id_list:
+    for email_id in email_id_list[0:10]:
         _, email_data = mail.fetch(email_id, "(RFC822)")
         raw_email = email_data[0][1]
 

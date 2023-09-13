@@ -9,7 +9,9 @@ from rich import print
 from gmailautomater.organize import organize_mail
 from gmailautomater.email_utils.login import create_env, store_email, store_app_password
 from gmailautomater.email_utils.labels import (
+    get_labels,
     add_label_to_email,
+    get_emails_by_label,
     check_if_label_exists,
     remove_label_from_email,
 )
@@ -87,3 +89,13 @@ def add_email(email: str, label: str):
     # else:
     #     print(f"[bold red]Email: {email}, not added to label: {label}.")
     #     LOG.debug(f"Label not found: {label}")
+
+
+# TODO: build email list from labels
+@email.command()
+def init_emails():
+    """Add all email senders from folders to sorting."""
+    labels = get_labels()
+    for label in labels:
+        print(label)
+    # get_emails_by_label("Shopping")

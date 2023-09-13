@@ -15,7 +15,6 @@ ALL_QUERY = 'X-GM-LABELS "inbox" SEEN NOT FLAGGED'
 
 
 def organize_mail(all: bool):
-    # TODO: add dynamic query building
     mail = imaplib.IMAP4_SSL("imap.gmail.com")
     last_checked = get_last_checked()
 

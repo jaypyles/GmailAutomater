@@ -3,6 +3,7 @@ import re
 import email
 import logging
 from time import sleep
+from typing import List
 from imaplib import IMAP4_SSL
 
 # LOCAL
@@ -11,6 +12,41 @@ from gmailautomater.email_utils.mail import connect_to_mail
 from gmailautomater.sqlite.DatabaseFunctions import retrieve_emails_from_db
 
 LOG = logging.getLogger()
+
+
+def get_emails_by_label(label: str):
+    """Get a list of Email objects by label."""
+    email_ids = []
+    if mail := connect_to_mail():
+        status, _ = mail.select(label)
+        if status == "OK":
+            # Search for emails within the selected folder (you can specify search criteria)
+            search_criteria = (
+                "ALL"  # You can use different criteria (e.g., 'UNSEEN', 'FROM', etc.)
+            )
+            status, message_ids = mail.search(None, search_criteria)
+
+            if status == "OK":
+                # The variable message_ids contains a space-separated list of email message IDs
+                email_ids = message_ids[0].split()
+
+    # LOCAL
+    from gmailautomater.email_utils.utils import get_emails
+
+    return get_emails(mail, email_ids, all=True)
+
+
+def get_labels():
+    """Get all current custom labels in Gmail."""
+    l = []
+    if mail := connect_to_mail():
+        _, labels = mail.list()
+        for label in labels:
+            if isinstance(label, bytes):
+                if "Gmail" not in str(label):
+                    l.append(label.decode())
+        return [label.split()[-1] for label in l]
+    return l
 
 
 def remove_label_from_email(label: str):
