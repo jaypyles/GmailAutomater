@@ -85,7 +85,7 @@ def remove_label(label: str):
 @click.argument("label", required=True)
 def add_email(email: str, label: str):
     """Add an email to be sorted into a label."""
-    if check_if_label_exists(label):
+    if check_if_label_exists(label) or label == "deletion":
         add_email_to_label(label, email)
         print(f"[bold green]Email: {email}, added to label: {label}.")
     else:
