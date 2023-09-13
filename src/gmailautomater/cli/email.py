@@ -91,11 +91,13 @@ def add_email(email: str, label: str):
     #     LOG.debug(f"Label not found: {label}")
 
 
-# TODO: build email list from labels
 @email.command()
 def init_emails():
     """Add all email senders from folders to sorting."""
     labels = get_labels()
     for label in labels:
-        print(label)
-    # get_emails_by_label("Shopping")
+        emails = get_emails_by_label(label)
+        emails = set(email.sender for email in emails)  # avoid dupes
+        for email in emails:
+            add_email_to_label(label, email)
+            print(f"[bold green]Email: {email}, added to label: {label}.")

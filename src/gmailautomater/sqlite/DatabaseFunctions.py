@@ -78,7 +78,7 @@ def add_email_to_label(label: str, email: str):
     """Add a email to be sorted into a label."""
     conn = connect_to_db()
     query = f"""
-    INSERT INTO {label} (sender)
+    INSERT OR IGNORE INTO {label} (sender)
     VALUES
     ('{email}');
     """
