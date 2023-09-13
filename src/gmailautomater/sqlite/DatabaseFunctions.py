@@ -1,12 +1,34 @@
 # STL
+import os
 import logging
 import sqlite3
-from sqlite3 import Connection, connect
+import subprocess
+from sqlite3 import Connection
 
 # LOCAL
 from gmailautomater.mail.Email import EmailName
 
 LOG = logging.getLogger()
+
+
+def initalize_db():
+    """Check if the db has been initalized."""
+    file_path = os.path.join(os.getcwd(), "sqlite-db/data/gmail.db")
+    if os.path.exists(file_path):
+        return True
+    else:
+        try:
+            create_db = "sqlite3 sqlite-db/data/gmail.db < sqlite-db/data/gmail.sql"
+            subprocess.run(
+                create_db,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with exit code {e.returncode}")
 
 
 def connect_to_db():

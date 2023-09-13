@@ -16,10 +16,12 @@ from gmailautomater.email_utils.labels import (
     remove_label_from_email,
 )
 from gmailautomater.sqlite.DatabaseFunctions import (
+    initalize_db,
     add_label_to_db,
     add_email_to_label,
     add_label_to_table,
     delete_label_table,
+    retrieve_labels_from_db,
     remove_label_from_labels,
 )
 
@@ -94,9 +96,11 @@ def add_email(email: str, label: str):
 @email.command()
 def init_emails():
     """Initialize all email senders and labels from current folders."""
+    initalize_db()
     labels = get_labels()
     for label in labels:
-        if not check_if_label_exists(label):
+        db_labels = retrieve_labels_from_db()
+        if label not in db_labels:
             add_label_to_db(label)
             add_label_to_table(label)
         emails = get_emails_by_label(label)
