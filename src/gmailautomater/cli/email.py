@@ -83,19 +83,22 @@ def remove_label(label: str):
 @click.argument("label", required=True)
 def add_email(email: str, label: str):
     """Add an email to be sorted into a label."""
-    # if check_if_label_exists(label):
-    add_email_to_label(label, email)
-    print(f"[bold green]Email: {email}, added to label: {label}.")
-    # else:
-    #     print(f"[bold red]Email: {email}, not added to label: {label}.")
-    #     LOG.debug(f"Label not found: {label}")
+    if check_if_label_exists(label):
+        add_email_to_label(label, email)
+        print(f"[bold green]Email: {email}, added to label: {label}.")
+    else:
+        print(f"[bold red]Email: {email}, not added to label: {label}.")
+        LOG.debug(f"Label not found: {label}")
 
 
 @email.command()
 def init_emails():
-    """Add all email senders from folders to sorting."""
+    """Initialize all email senders and labels from current folders."""
     labels = get_labels()
     for label in labels:
+        if not check_if_label_exists(label):
+            add_label_to_db(label)
+            add_label_to_table(label)
         emails = get_emails_by_label(label)
         emails = set(email.sender for email in emails)  # avoid dupes
         for email in emails:
