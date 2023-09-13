@@ -29,7 +29,9 @@ def initalize_db():
             )
             return True
         except subprocess.CalledProcessError as e:
-            LOG.error(f"Command failed with exit code {e.returncode}")
+            LOG.error(
+                f"Command failed with exit code {e.returncode}, ensure you have sqlite3."
+            )
             return False
 
 

@@ -23,7 +23,7 @@ cli.add_command(email)
 
 def main():
     load_dotenv(dotenv_path=".env")
-    if initalize_db():
+    if initalize_db():  # WILL fail if db does not exist
         cli()
 
 
