@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 # LOCAL
 from gmailautomater.cli.email import email
+from gmailautomater.sqlite.DatabaseFunctions import initalize_db
 
 LOG = logging.getLogger()
 
@@ -22,7 +23,8 @@ cli.add_command(email)
 
 def main():
     load_dotenv(dotenv_path=".env")
-    cli()
+    if initalize_db():
+        cli()
 
 
 if __name__ == "__main__":

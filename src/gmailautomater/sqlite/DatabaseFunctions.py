@@ -27,8 +27,10 @@ def initalize_db():
                 stderr=subprocess.PIPE,
                 text=True,
             )
+            return True
         except subprocess.CalledProcessError as e:
-            print(f"Command failed with exit code {e.returncode}")
+            LOG.error(f"Command failed with exit code {e.returncode}")
+            return False
 
 
 def connect_to_db():

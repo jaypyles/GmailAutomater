@@ -96,7 +96,6 @@ def add_email(email: str, label: str):
 @email.command()
 def init_emails():
     """Initialize all email senders and labels from current folders."""
-    initalize_db()
     labels = get_labels()
     for label in labels:
         db_labels = retrieve_labels_from_db()
