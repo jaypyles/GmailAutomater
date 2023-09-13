@@ -69,11 +69,9 @@ def get_emails(mail, email_id_list: list, all: bool) -> List[Email]:
     emails = []
 
     with Progress() as progress:
-        task = progress.add_task(
-            "[cyan]Collecting emails...", total=len(email_id_list[0:100])
-        )
+        task = progress.add_task("[cyan]Collecting emails...", total=len(email_id_list))
         pc = 0
-        for email_id in email_id_list[-2000:]:
+        for email_id in email_id_list:
             _, email_data = mail.fetch(email_id, "(RFC822)")
             raw_email = email_data[0][1]
 
