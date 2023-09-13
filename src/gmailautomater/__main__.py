@@ -25,6 +25,8 @@ def main():
     load_dotenv(dotenv_path=".env")
     if initalize_db():  # WILL fail if db does not exist
         cli()
+    else:
+        LOG.error("DB is not initalized. Ensure `init-emails` has been ran.")
 
 
 if __name__ == "__main__":
