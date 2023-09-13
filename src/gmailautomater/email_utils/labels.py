@@ -45,8 +45,8 @@ def get_labels():
             if isinstance(label, bytes):
                 if "Gmail" not in str(label):
                     l.append(label.decode())
-        l = [label.split()[-1] for label in l]
-        l.remove('"INBOX"')
+        l = [label.split()[-1].replace('"', "") for label in l]
+        l.remove("INBOX")
         return l
     return l
 

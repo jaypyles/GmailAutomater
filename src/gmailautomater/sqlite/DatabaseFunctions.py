@@ -68,7 +68,7 @@ def get_last_checked():
     if len(rows) == 0:
         return None
     else:
-        return rows[0]
+        return rows[0][0]
 
 
 def insert_last_checked(date):
@@ -76,7 +76,7 @@ def insert_last_checked(date):
     conn = connect_to_db()
     query = f"""
     INSERT OR REPLACE INTO last_checked (id, check_date)
-    VALUES (1, {date});
+    VALUES (1, '{date}');
     """
     execute_db(conn, query)
 
@@ -148,7 +148,6 @@ def retrieve_emails_from_db(table_name: str) -> list[EmailName]:
     """Retrieve a list of email names from a table in the db."""
     conn = sqlite3.connect("sqlite-db/data/gmail.db")
     query = f"SELECT sender FROM `{table_name}`"
-    LOG.info(query)
     rows = query_db(conn, query)
     return [email[0] for email in rows]
 
