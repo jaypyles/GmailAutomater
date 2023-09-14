@@ -114,5 +114,9 @@ def init_emails():
 def top_emails():
     """Find what email senders have sent the most emails."""
     if top := find_top_emails():
+        count = 0
         for key, value in top.items():
-            print(f"Sender: {key}, Amount: {value}")
+            print(f"{key}: {value}")
+            count += 1
+            if count == 20:
+                break
