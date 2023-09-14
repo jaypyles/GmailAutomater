@@ -8,6 +8,7 @@ from rich import print
 # LOCAL
 from gmailautomater.organize import organize_mail
 from gmailautomater.email_utils.login import create_env, store_email, store_app_password
+from gmailautomater.email_utils.utils import find_top_emails
 from gmailautomater.email_utils.labels import (
     get_labels,
     add_label_to_email,
@@ -107,3 +108,10 @@ def init_emails():
         for email in emails:
             add_email_to_label(label, email)
             print(f"[bold green]Email: {email}, added to label: {label}.")
+
+
+@email.command()
+def top_emails():
+    """Find what email senders have sent the most emails."""
+    if top := find_top_emails():
+        print(top[:20])
