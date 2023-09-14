@@ -4,10 +4,11 @@ version = "0.1.0"
 description = ""
 authors = [{ name = "Jayden Pyles", email = "jpylesbusiness@gmail.com" }]
 dependencies = [
-  "python-dotenv",
-  "click>=8.1.7",
-  "rich>=13.5.2",
-  "imap-tools>=1.2.0",
+    "python-dotenv",
+    "click>=8.1.7",
+    "rich>=13.5.2",
+    "imap-tools>=1.2.0",
+    "pipx>=1.2.0",
 ]
 requires-python = ">=3.9"
 license = { text = "MIT" }
