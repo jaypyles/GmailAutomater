@@ -163,16 +163,17 @@ def categorize_emails(emails: list[Email], trie: TrieLabelNode, labels):
     """Categorize a list of emails based on a trie."""
     categorized_emails = {label: [] for label in labels}
     for email in emails:
-        components = email.sender.split("@")
-        local = components[0]
-        domain = components[1]
-        node = trie
-        for char in local:
-            if char not in node.children:
-                break
-            node = node.children[char]
-            if domain in node.children:
-                node = node.children[domain]
-                if node.label:
-                    categorized_emails[node.label].append(email)
+        if email.sender:
+            components = email.sender.split("@")
+            local = components[0]
+            domain = components[1]
+            node = trie
+            for char in local:
+                if char not in node.children:
+                    break
+                node = node.children[char]
+                if domain in node.children:
+                    node = node.children[domain]
+                    if node.label:
+                        categorized_emails[node.label].append(email)
     return categorized_emails
