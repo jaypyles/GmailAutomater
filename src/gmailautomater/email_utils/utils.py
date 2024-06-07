@@ -49,7 +49,7 @@ def organize_inbox(mail: IMAP4_SSL, emails: list[Email]) -> None:
                 continue
 
             print(f"EMAIL: {e}")
-            if label == "deletion":
+            if label == "delete":
                 for e in email_map[e]:
                     mark_email_for_deletion(mail, e)
             else:

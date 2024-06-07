@@ -30,6 +30,11 @@ def initialize_db() -> bool:
             stderr=subprocess.PIPE,
             text=True,
         )
+
+        conn = connect_to_db()
+        query = f"INSERT INTO label (id, name) VALUES ('{uuid.uuid4().hex}', 'delete');"
+        execute_db(conn, query)
+
         return True
     except subprocess.CalledProcessError as e:
         LOG.error(
