@@ -1,38 +1,41 @@
 # STL
 import os
+import uuid
 import logging
 import sqlite3
 import subprocess
 from sqlite3 import Connection
 
 # LOCAL
+from gmailautomater.utils import transaction
 from gmailautomater.mail.Email import EmailName
+from gmailautomater.mail.Label import Label
 
 LOG = logging.getLogger()
 
 
-def initalize_db():
+def initialize_db() -> bool:
     """Check if the db has been initalized."""
     file_path = os.path.join(os.getcwd(), "sqlite-db/data/gmail.db")
     if os.path.exists(file_path):
         return True
-    else:
-        try:
-            create_db = "sqlite3 sqlite-db/data/gmail.db < sqlite-db/data/gmail.sql"
-            subprocess.run(
-                create_db,
-                shell=True,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            return True
-        except subprocess.CalledProcessError as e:
-            LOG.error(
-                f"Command failed with exit code {e.returncode}, ensure you have sqlite3."
-            )
-            return False
+
+    try:
+        create_db = "sqlite3 sqlite-db/data/gmail.db < sqlite-db/data/gmail.sql"
+        _ = subprocess.run(
+            create_db,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        return True
+    except subprocess.CalledProcessError as e:
+        LOG.error(
+            f"Command failed with exit code {e.returncode}, ensure you have sqlite3."
+        )
+        return False
 
 
 def connect_to_db():
@@ -43,7 +46,7 @@ def connect_to_db():
 def query_db(conn: Connection, query: str):
     """Make a query to the db."""
     cursor = conn.cursor()
-    cursor.execute(query)
+    _ = cursor.execute(query)
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -81,74 +84,98 @@ def insert_last_checked(date):
     execute_db(conn, query)
 
 
-def delete_label_table(label: str):
-    """Delete the table for the label."""
-    conn = connect_to_db()
-    query = f"""
-    DROP TABLE {label};
-    """
-    execute_db(conn, query)
-
-
 def remove_label_from_labels(label: str):
     """Remove a label from the label table."""
     conn = connect_to_db()
-    query = f"""
-    DELETE FROM labels
-    WHERE name = '{label}';
-    """
-    execute_db(conn, query)
+
+    try:
+        with transaction(conn) as cursor:
+            _ = cursor.execute("SELECT id FROM label WHERE name = ?", (label,))
+            label_row: list[str] = cursor.fetchone()
+            if not label_row:
+                raise ValueError(f"Label '{label}' not found")
+
+            label_id = label_row[0]
+            print(label_id)
+
+            _ = cursor.execute(
+                "DELETE FROM label_to_email WHERE label_id = ?;", (label_id,)
+            )
+
+            _ = cursor.execute("DELETE FROM label where id = ?;", (label_id,))
+
+    finally:
+        conn.close()
 
 
-def add_email_to_label(label: str, email: str):
-    """Add a email to be sorted into a label."""
-    conn = connect_to_db()
-    query = f"""
-    INSERT OR IGNORE INTO {label} (sender)
-    VALUES
-    ('{email}');
-    """
-    execute_db(conn, query)
+def add_email_to_label(label: Label, email: str) -> str:
+    """Add an email to be sorted into a label."""
+    connection = connect_to_db()
+    email_id = uuid.uuid4().hex
+
+    try:
+        with transaction(connection) as cursor:
+            _ = cursor.execute("SELECT id FROM label WHERE name = ?", (label,))
+            label_row: list[str] = cursor.fetchone()
+            if not label_row:
+                raise ValueError(f"Label '{label}' not found")
+
+            label_id = label_row[0]
+
+            _ = cursor.execute(
+                "INSERT OR IGNORE INTO email (id, domain) VALUES (?, ?)",
+                (email_id, email),
+            )
+
+            _ = cursor.execute(
+                "INSERT OR IGNORE INTO label_to_email (label_id, email_id) VALUES (?, ?);",
+                (label_id, email_id),
+            )
+
+    finally:
+        connection.close()
+
+    return email_id
 
 
-def add_label_to_db(label_name: str):
+def add_label_to_db(label: Label) -> str:
     """Add a new label to the db."""
-    conn = connect_to_db()
-    query = f"""
-    CREATE TABLE
-    IF NOT EXISTS {label_name} (
-        id INTEGER PRIMARY KEY,
-        sender TEXT NOT NULL UNIQUE
-    );
-    """
-    execute_db(conn, query)
+    connection = connect_to_db()
+    label_id = uuid.uuid4().hex
+    try:
+        with transaction(connection) as cursor:
+            _ = cursor.execute(
+                "INSERT INTO label (id, name) VALUES (?, ?);", (label_id, label)
+            )
 
+    finally:
+        connection.close()
 
-def add_label_to_table(label_name: str):
-    """Add a label to the labels table in the db."""
-    conn = connect_to_db()
-    query = f"""
-    INSERT INTO
-    labels (name)
-    VALUES
-    ('{label_name}');
-    """
-    execute_db(conn, query)
+    return label_id
 
 
 def retrieve_labels_from_db():
     """Retrieve a list of label names from the db."""
     conn = connect_to_db()
-    query = "SELECT name FROM labels"
+    query = "SELECT name FROM label;"
     rows = query_db(conn, query)
+    print(rows)
     return [row[0] for row in rows]
 
 
-def retrieve_emails_from_db(table_name: str) -> list[EmailName]:
+def retrieve_emails_from_db(label: Label) -> list[EmailName]:
     """Retrieve a list of email names from a table in the db."""
     conn = sqlite3.connect("sqlite-db/data/gmail.db")
-    query = f"SELECT sender FROM `{table_name}`"
-    rows = query_db(conn, query)
+
+    query = f"""
+    SELECT e.domain
+    FROM label AS l
+    JOIN label_to_email AS lte ON l.id = lte.label_id
+    JOIN email AS e ON lte.email_id = e.id
+    WHERE l.name = '{label}';
+    """
+
+    rows: list[tuple[EmailName]] = query_db(conn, query)
     return [email[0] for email in rows]
 
 

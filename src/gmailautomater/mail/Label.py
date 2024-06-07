@@ -1,4 +1,4 @@
 # STL
-from typing import Type
+from typing import NewType
 
-Label = Type[str]
+Label = NewType("Label", str)

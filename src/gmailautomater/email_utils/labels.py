@@ -1,34 +1,35 @@
 # STL
 import re
-import email
+import email as emaillib
+import imaplib
 import logging
 from time import sleep
-from typing import List
 from imaplib import IMAP4_SSL
 
 # LOCAL
 from gmailautomater.mail.Email import Email, EmailName
+from gmailautomater.mail.Label import Label
 from gmailautomater.email_utils.mail import connect_to_mail
 from gmailautomater.sqlite.DatabaseFunctions import retrieve_emails_from_db
 
 LOG = logging.getLogger()
 
 
-def get_emails_by_label(label: str):
+def get_emails_by_label(mail: imaplib.IMAP4_SSL, label: Label) -> list[Email]:
     """Get a list of Email objects by label."""
-    email_ids = []
-    if mail := connect_to_mail():
-        status, _ = mail.select(label)
-        if status == "OK":
-            # Search for emails within the selected folder (you can specify search criteria)
-            search_criteria = (
-                "ALL"  # You can use different criteria (e.g., 'UNSEEN', 'FROM', etc.)
-            )
-            status, message_ids = mail.search(None, search_criteria)
+    email_ids: list[Label] = list()
 
-            if status == "OK":
-                # The variable message_ids contains a space-separated list of email message IDs
-                email_ids = message_ids[0].split()
+    status, _ = mail.select(label)
+    if status == "OK":
+        # Search for emails within the selected folder (you can specify search criteria)
+        search_criteria = (
+            "ALL"  # You can use different criteria (e.g., 'UNSEEN', 'FROM', etc.)
+        )
+        status, message_ids = mail.search(None, search_criteria)
+
+        if status == "OK":
+            # The variable message_ids contains a space-separated list of email message IDs
+            email_ids = message_ids[0].split()
 
     # LOCAL
     from gmailautomater.email_utils.utils import get_emails
@@ -36,57 +37,62 @@ def get_emails_by_label(label: str):
     return get_emails(mail, email_ids, all=True)
 
 
-def get_labels():
+def get_labels(mail: imaplib.IMAP4_SSL) -> list[Label]:
     """Get all current custom labels in Gmail."""
-    l = []
-    if mail := connect_to_mail():
-        _, labels = mail.list()
-        for label in labels:
-            if isinstance(label, bytes):
-                if "Gmail" not in str(label):
-                    l.append(label.decode())
-        l = [label.split()[-1].replace('"', "") for label in l]
-        l.remove("INBOX")
-        return l
-    return l
+
+    _, response = mail.list()
+    labels: list[Label] = list()
+
+    for label in response:
+        if not isinstance(label, bytes):
+            continue
+
+        if "Gmail" not in str(label):
+            labels.append(Label(label.decode()))
+
+    labels = [Label(label.split()[-1].replace('"', "")) for label in labels]
+    labels.remove(Label("INBOX"))
+
+    return labels
 
 
-def remove_label_from_email(label: str):
+def remove_label_from_email(label: Label) -> None:
     """Remove label from Gmail."""
-    if mail := connect_to_mail():
-        result, _ = mail.delete(label)
-        if result == "OK":
-            LOG.info(f"Label deleted from inbox: {label}.")
-        else:
-            LOG.error(f"Failed to delete label: {label}.")
+    if not (mail := connect_to_mail()):
+        return
 
-        mail.logout()
+    result, _ = mail.delete(label)
+
+    if result != "OK":
+        LOG.error(f"Failed to delete label: {label}.")
+
+    LOG.info(f"Label deleted from inbox: {label}.")
+    _ = mail.logout()
 
 
-def add_label_to_email(label: str):
+def add_label_to_email(mail: imaplib.IMAP4_SSL, label: str) -> None:
     """Add label to email."""
-    if mail := connect_to_mail():
-        result, _ = mail.create(label)
-        if result == "OK":
-            LOG.debug(f"Label created in inbox: {label}.")
-        else:
-            LOG.debug(f"Failed to create label: {label}.")
+    result, _ = mail.create(label)
+    _ = mail.logout()
 
-        mail.logout()
+    if result != "OK":
+        raise Exception("Failed to create label.")
+
+    return
 
 
-def check_if_label_exists(label: str):
+def check_if_label_exists(mail: imaplib.IMAP4_SSL, label: str):
     """Check if a label exists in a mailbox."""
-    if mail := connect_to_mail():
-        response, labels = mail.list()
-        if response == "OK":
-            for lbl in labels:
-                if isinstance(lbl, bytes):
-                    if label in lbl.decode():
-                        return True
-            return False
-        else:
-            return False
+    response, labels = mail.list()
+
+    if response == "OK":
+        for lbl in labels:
+            if isinstance(lbl, bytes):
+                if label in lbl.decode():
+                    return True
+        return False
+
+    return False
 
 
 def check_email_for_move(email: Email, label_email_list: list[EmailName]):
@@ -94,15 +100,14 @@ def check_email_for_move(email: Email, label_email_list: list[EmailName]):
     return email.sender in label_email_list
 
 
-def move_email_to_label(mail: IMAP4_SSL, e: Email, label):
+def move_email_to_label(mail: IMAP4_SSL, e: Email, label: Label):
     """Move email from main inbox to a label."""
 
-    _, email_data = mail.fetch(str(e.id), "(RFC822)")
-    LOG.debug(f"Email Data: {email_data.__class__}")
+    _, email_data = mail.fetch(e.id, "(RFC822)")
     raw_email = email_data[0][1]
 
     if isinstance(raw_email, bytes):
-        msg = email.message_from_bytes(raw_email)
+        msg = emaillib.message_from_bytes(raw_email)
     else:
         return
 
@@ -113,22 +118,25 @@ def move_email_to_label(mail: IMAP4_SSL, e: Email, label):
 
     # Remove the "Inbox" label
     if e.sender == sender:
-        mail.store(str(e.id), "+X-GM-LABELS", label)
+        mail.store(e.id, "+X-GM-LABELS", label)
         sleep(
             1
         )  # Fix weird error where the server wouldn't update and it would move the wrong id
-        mail.store(str(e.id), "-X-GM-LABELS", "\\Inbox")
+        mail.store(e.id, "-X-GM-LABELS", "\\Inbox")
         mail.expunge()
     else:
         pass
 
 
-def build_label_map(labels: list):
+def build_label_map(labels: list[Label]):
     """From a list of labels, build a map emails to label."""
-    label_map = {}
+    label_map: dict[EmailName, Label] = {}
+
     for label in labels:
         emails = retrieve_emails_from_db(label)
-        label_map[label] = emails
+
+        for e in emails:
+            label_map[e] = label
 
     return label_map
 
@@ -159,21 +167,30 @@ def build_email_label_trie(label_map: dict):
     return root
 
 
-def categorize_emails(emails: list[Email], trie: TrieLabelNode, labels):
+def categorize_emails(
+    emails: list[Email],
+    labels: list[Label],
+    label_map: dict[EmailName, Label],
+):
     """Categorize a list of emails based on a trie."""
-    categorized_emails = {label: [] for label in labels}
+    categorized_emails: dict[Label, list[Email]] = {label: list() for label in labels}
+
     for email in emails:
         if email.sender:
             components = email.sender.split("@")
             local = components[0]
             domain = components[1]
             node = trie
+
             for char in local:
                 if char not in node.children:
                     break
+
                 node = node.children[char]
                 if domain in node.children:
                     node = node.children[domain]
+
                     if node.label:
                         categorized_emails[node.label].append(email)
+
     return categorized_emails

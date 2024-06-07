@@ -1,13 +1,16 @@
 # STL
-from typing import Type
+import re
+from typing import Type, NewType
 
-EmailName = Type[str]
+EmailName = NewType("EmailName", str)
 
 
 class Email(object):
-    def __init__(self, subject: str, sender: str, id: bytes, date: str) -> None:
+    def __init__(self, subject: str, sender: EmailName, id: bytes, date: str) -> None:
         self.id = id
-        self.sender = sender
+        simple_email_regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+        _sender = re.search(simple_email_regex, sender)
+        self.sender = _sender.group(0) if _sender else ""
         self.subject = subject
         self.date = date
 

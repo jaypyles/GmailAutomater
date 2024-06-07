@@ -10,10 +10,11 @@ dependencies = [
     "imap-tools>=1.2.0",
     "pipx>=1.2.0",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 
-[project.scripts]
+[tool.pdm]
+[tool.pdm.scripts]
 gmailautomater = "gmailautomater.__main__:main"
 
 [tool.pyright]

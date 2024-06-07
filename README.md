@@ -9,6 +9,7 @@ Install the library using `pipx install .`
 
 # TODO
 
-- [x] Edit login credentials via CLI
-- [x] Add and delete labels from inbox
-- [x] Add emails to labels
+- [ ] List all current labels
+- [ ] Pytest integration
+- [ ] Documentation
+- [ ] Config file to read from
