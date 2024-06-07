@@ -1,6 +1,6 @@
 # STL
 import re
-from typing import Type, NewType
+from typing import NewType
 
 EmailName = NewType("EmailName", str)
 

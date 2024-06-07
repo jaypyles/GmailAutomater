@@ -2,6 +2,7 @@
 import os
 import imaplib
 import logging
+from typing import cast
 from datetime import datetime
 
 # LOCAL
@@ -36,9 +37,10 @@ def organize_mail(all: bool):
     _ = mail.select('"[Gmail]/All Mail"')
 
     _, email_ids = mail.search(None, query)
+    email_ids = cast(list[bytes], email_ids)
 
-    email_id_list = email_ids[0].split()
-    emails = get_emails(mail, email_id_list, all)
+    email_id_list: list[bytes] = email_ids[0].split()
+    emails = get_emails(email_id_list, all)
     organize_inbox(mail, emails)
 
     _ = mail.logout()
