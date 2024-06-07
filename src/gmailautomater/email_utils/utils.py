@@ -3,13 +3,14 @@ import re
 import email
 import logging
 import threading
-from typing import Any, Union, Optional, cast
+from typing import Any, Union, Optional, TypedDict, NamedTuple, cast
 from imaplib import IMAP4_SSL
 from collections import defaultdict
 from email.header import decode_header
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 
 # PDM
+from rich import print
 from rich.progress import Progress
 
 # LOCAL
@@ -27,7 +28,12 @@ from gmailautomater.sqlite.DatabaseFunctions import (
 LOG = logging.getLogger()
 
 
-def organize_inbox(mail: IMAP4_SSL, emails: list[Email]) -> None:
+class OrganizeResult(TypedDict):
+    result: int
+    label: str
+
+
+def organize_inbox(emails: list[Email]) -> None:
     """Move emails to their respective labels along with deleting emails when needed."""
     labels = retrieve_labels_from_db()
     label_map = build_label_map(labels)
@@ -37,29 +43,41 @@ def organize_inbox(mail: IMAP4_SSL, emails: list[Email]) -> None:
     for e in emails:
         email_map[e.sender].append(e)
 
+    MAX_WORKERS = 8
+
+    label_map_items = list(label_map.items())
+    batched_label_map_items = split_list(label_map_items, MAX_WORKERS)
+
     with Progress() as progress:
         task = progress.add_task(
-            "[cyan]Sorting emails...", total=len(email_map.items())
+            "[cyan]Sorting emails...", total=len(batched_label_map_items)
         )
         pc = 0
-        MAX_WORKERS = 8
 
-        label_map_items = list(label_map.items())
-        batched_label_map_items = split_list(label_map_items, MAX_WORKERS)
+        def mark(items: list[tuple[str, Label]]) -> OrganizeResult:
+            email_count = 0
+            result: OrganizeResult = {"label": "", "result": email_count}
 
-        def mark(items: list[tuple[str, Label]]):
-            # print(f"ITEMS: {items}")
             for e, label in items:
+                result["label"] = label
+
                 if not (email_map.get(e)):
                     continue
 
                 if label == "delete":
                     for e in email_map[e]:
                         mark_email_for_deletion(e)
+                        email_count += 1
                         continue
 
                 for e in email_map[e]:
+                    email_count += 1
                     move_email_to_label(e, label)
+
+            result["result"] = email_count
+            return result
+
+        results: list[OrganizeResult] = list()
 
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures: set[Future[Any]] = set()
@@ -69,11 +87,25 @@ def organize_inbox(mail: IMAP4_SSL, emails: list[Email]) -> None:
                 futures.add(future)
 
             for future in as_completed(futures):
-                result = future.result()
-                LOG.debug(result)
+                result: OrganizeResult = future.result()
+                results.append(result)
 
                 pc += 1
                 progress.update(task, completed=pc)
+
+        moved_emails: dict[str, int] = dict()
+
+    for result in results:
+        if result["label"] not in moved_emails:
+            moved_emails[result["label"]] = result["result"]
+            continue
+
+        moved_emails[result["label"]] += result["result"]
+
+    for label, count in moved_emails.items():
+        print(
+            f"[bold green]{count} emails moved into: [/bold green][bold italic yellow]{label}[/bold italic yellow][bold green]."
+        )
 
 
 def decode_email_from(header: bytes) -> str:
@@ -164,12 +196,14 @@ def get_emails(
     "From a list of email ids, return a list of emails."
     emails: list[Email] = list()
 
-    with Progress() as progress:
-        task = progress.add_task("[cyan]Collecting emails...", total=len(email_id_list))
-        pc = 0
+    WORKER_COUNT = 8
+    batched_email_id_list = split_list(email_id_list[::-1][:], WORKER_COUNT)
 
-        WORKER_COUNT = 8
-        batched_email_id_list = split_list(email_id_list[::-1][:], WORKER_COUNT)
+    with Progress() as progress:
+        task = progress.add_task(
+            "[cyan]Collecting emails...", total=len(batched_email_id_list) * 2
+        )
+        pc = 0
 
         with ThreadPoolExecutor(max_workers=WORKER_COUNT) as executor:
             futures: set[Future[list[Email]]] = set()
@@ -178,6 +212,9 @@ def get_emails(
                 futures.add(
                     executor.submit(get_and_transform_emails, label, _email_id_list)
                 )
+
+                pc += 1
+                progress.update(task, completed=pc)
 
             for future in as_completed(futures):
                 result = future.result()

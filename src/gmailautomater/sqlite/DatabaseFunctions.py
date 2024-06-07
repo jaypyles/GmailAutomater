@@ -13,15 +13,20 @@ from gmailautomater.mail.Label import Label
 
 LOG = logging.getLogger()
 
+HOME = os.environ.get("HOME")
+assert HOME, "Must set $HOME."
+DATABASE_PATH = os.path.join(HOME, ".config/gmailautomater/sqlite-db/data/gmail.db")
+
 
 def initialize_db() -> bool:
-    """Check if the db has been initalized."""
-    file_path = os.path.join(os.getcwd(), "sqlite-db/data/gmail.db")
-    if os.path.exists(file_path):
+    """Check if the db has been initialized."""
+
+    if os.path.exists(DATABASE_PATH):
         return True
 
     try:
-        create_db = "sqlite3 sqlite-db/data/gmail.db < sqlite-db/data/gmail.sql"
+        os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+        create_db = f"sqlite3 {DATABASE_PATH} < sqlite-db/data/gmail.sql"
         _ = subprocess.run(
             create_db,
             shell=True,
@@ -32,11 +37,34 @@ def initialize_db() -> bool:
         )
 
         conn = connect_to_db()
-        query = f"INSERT INTO label (id, name) VALUES ('{uuid.uuid4().hex}', 'delete');"
+        query = f"""
+
+        CREATE TABLE IF NOT EXISTS last_checked (id INTEGER PRIMARY KEY, check_date TEXT);
+
+        CREATE TABLE IF NOT EXISTS label (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);
+
+        CREATE TABLE IF NOT EXISTS email (id TEXT PRIMARY KEY, domain TEXT NOT NULL UNIQUE);
+
+        CREATE TABLE IF NOT EXISTS label_to_email (
+        label_id TEXT NOT NULL,
+        email_id TEXT NOT NULL,
+        PRIMARY KEY (label_id, email_id),
+        FOREIGN KEY (label_id) REFERENCES label (id),
+        FOREIGN KEY (email_id) REFERENCES email (id)
+        );
+
+        CREATE TABLE IF NOT EXISTS deletion (
+        id INTEGER PRIMARY KEY,
+        domain TEXT NOT NULL UNIQUE
+        );
+
+        INSERT INTO label (id, name) VALUES ('{uuid.uuid4().hex}', 'delete');
+        """
         execute_db(conn, query)
 
         return True
     except subprocess.CalledProcessError as e:
+        LOG.error(f"ERROR: {e}")
         LOG.error(
             f"Command failed with exit code {e.returncode}, ensure you have sqlite3."
         )
@@ -45,7 +73,7 @@ def initialize_db() -> bool:
 
 def connect_to_db():
     """Connect to the db."""
-    return sqlite3.connect("sqlite-db/data/gmail.db")
+    return sqlite3.connect(DATABASE_PATH)
 
 
 def query_db(conn: Connection, query: str):
@@ -164,7 +192,6 @@ def retrieve_labels_from_db():
     conn = connect_to_db()
     query = "SELECT name FROM label;"
     rows = query_db(conn, query)
-    print(rows)
     return [row[0] for row in rows]
 
 

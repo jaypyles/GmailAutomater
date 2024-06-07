@@ -5,7 +5,6 @@ import imaplib
 import logging
 from time import sleep
 from typing import cast
-from imaplib import IMAP4_SSL
 
 # LOCAL
 from gmailautomater.utils import DEFAULT_LABEL

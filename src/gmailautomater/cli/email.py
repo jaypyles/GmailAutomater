@@ -98,8 +98,17 @@ def add_email(email: str, label: str):
 
 
 @email.command()
-def init_emails():
-    """Initialize all email senders and labels from current folders."""
+@click.option("--email", "email", required=True)
+def delete_email(email: str):
+    """Add an email to be deleted when organized."""
+    _ = add_email_to_label(Label("delete"), email)
+    print(f"[bold green]Email: {email}, set to be deleted.")
+    return
+
+
+@email.command()
+def sync():
+    """Sync all email senders and labels from current folders."""
     mail = connect_to_mail()
 
     labels = get_labels(mail)
