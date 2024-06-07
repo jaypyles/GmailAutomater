@@ -37,30 +37,23 @@ def initialize_db() -> bool:
         )
 
         conn = connect_to_db()
-        query = f"""
+        queries = [
+            "CREATE TABLE IF NOT EXISTS last_checked (id INTEGER PRIMARY KEY, check_date TEXT);",
+            "CREATE TABLE IF NOT EXISTS label (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);",
+            "CREATE TABLE IF NOT EXISTS email (id TEXT PRIMARY KEY, domain TEXT NOT NULL UNIQUE);",
+            """CREATE TABLE IF NOT EXISTS label_to_email (
+                label_id TEXT NOT NULL,
+                email_id TEXT NOT NULL,
+                PRIMARY KEY (label_id, email_id),
+                FOREIGN KEY (label_id) REFERENCES label (id),
+                FOREIGN KEY (email_id) REFERENCES email (id)
+            );""",
+            "CREATE TABLE IF NOT EXISTS deletion (id INTEGER PRIMARY KEY, domain TEXT NOT NULL UNIQUE);",
+            f"INSERT INTO label (id, name) VALUES ('{uuid.uuid4().hex}', 'delete');",
+        ]
 
-        CREATE TABLE IF NOT EXISTS last_checked (id INTEGER PRIMARY KEY, check_date TEXT);
-
-        CREATE TABLE IF NOT EXISTS label (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);
-
-        CREATE TABLE IF NOT EXISTS email (id TEXT PRIMARY KEY, domain TEXT NOT NULL UNIQUE);
-
-        CREATE TABLE IF NOT EXISTS label_to_email (
-        label_id TEXT NOT NULL,
-        email_id TEXT NOT NULL,
-        PRIMARY KEY (label_id, email_id),
-        FOREIGN KEY (label_id) REFERENCES label (id),
-        FOREIGN KEY (email_id) REFERENCES email (id)
-        );
-
-        CREATE TABLE IF NOT EXISTS deletion (
-        id INTEGER PRIMARY KEY,
-        domain TEXT NOT NULL UNIQUE
-        );
-
-        INSERT INTO label (id, name) VALUES ('{uuid.uuid4().hex}', 'delete');
-        """
-        execute_db(conn, query)
+        for query in queries:
+            execute_db(conn, query)
 
         return True
     except subprocess.CalledProcessError as e:
