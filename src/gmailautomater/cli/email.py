@@ -88,7 +88,7 @@ def add_email(email: str, label: str):
     """Add an email to be sorted into a label."""
     mail = connect_to_mail()
 
-    if check_if_label_exists(mail, label) or label == "deletion":
+    if check_if_label_exists(mail, label) or label == "delete":
         _ = add_email_to_label(Label(label), email)
         print(f"[bold green]Email: {email}, added to label: {label}.")
         return
