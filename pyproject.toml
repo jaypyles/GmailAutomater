@@ -14,7 +14,8 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 
 [tool.pdm]
-[tool.pdm.scripts]
+
+[project.scripts]
 gmailautomater = "gmailautomater.__main__:main"
 
 [tool.pyright]
