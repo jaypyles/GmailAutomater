@@ -153,7 +153,7 @@ def get_emails(
         pc = 0
 
         WORKER_COUNT = 8
-        batched_email_id_list = split_list(email_id_list, WORKER_COUNT)
+        batched_email_id_list = split_list(email_id_list[::-1][:50], WORKER_COUNT)
 
         with ThreadPoolExecutor(max_workers=WORKER_COUNT) as executor:
             futures: set[Future[list[Email]]] = set()

@@ -18,7 +18,7 @@ license = { text = "MIT" }
 gmailautomater = "gmailautomater.__main__:main"
 
 [tool.pyright]
-include = ["src"]
+include = ["src/"]
 exclude = ["**/node_modules", "**/__pycache__"]
 ignore = []
 defineConstant = { DEBUG = true }
