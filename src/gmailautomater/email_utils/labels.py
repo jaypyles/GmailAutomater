@@ -11,7 +11,6 @@ from imaplib import IMAP4_SSL
 from gmailautomater.mail.Email import Email, EmailName
 from gmailautomater.mail.Label import Label
 from gmailautomater.email_utils.mail import connect_to_mail
-from gmailautomater.email_utils.utils import get_emails
 from gmailautomater.sqlite.DatabaseFunctions import retrieve_emails_from_db
 
 LOG = logging.getLogger()
@@ -30,6 +29,9 @@ def get_emails_by_label(mail: imaplib.IMAP4_SSL, label: Label) -> list[Email]:
         if status == "OK":
             message_ids = cast(list[bytes], message_ids)
             email_ids = message_ids[0].split()
+
+    # LOCAL
+    from gmailautomater.email_utils.utils import get_emails
 
     return get_emails(email_ids, all=True, label=label)
 
