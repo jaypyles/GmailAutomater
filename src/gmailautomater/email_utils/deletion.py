@@ -2,7 +2,9 @@
 from imaplib import IMAP4_SSL
 
 # LOCAL
+from gmailautomater.utils import DEFAULT_LABEL
 from gmailautomater.mail.Email import Email, EmailName
+from gmailautomater.email_utils.mail import connect_to_mail
 
 
 def check_email_for_deletion(email: Email, delete_list: list[EmailName]) -> bool:
@@ -10,8 +12,10 @@ def check_email_for_deletion(email: Email, delete_list: list[EmailName]) -> bool
     return email.sender in delete_list
 
 
-def mark_email_for_deletion(mail: IMAP4_SSL, email: Email) -> None:
+def mark_email_for_deletion(email: Email) -> None:
     """Mark an email for deletion."""
+    mail = connect_to_mail()
+    mail.select(DEFAULT_LABEL)
     _ = mail.store(email.id, "+X-GM-LABELS", "\\Trash")
     _ = mail.store(email.id, "-X-GM-LABELS", "\\All Mail")
 

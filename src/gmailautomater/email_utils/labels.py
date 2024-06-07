@@ -8,6 +8,7 @@ from typing import cast
 from imaplib import IMAP4_SSL
 
 # LOCAL
+from gmailautomater.utils import DEFAULT_LABEL
 from gmailautomater.mail.Email import Email, EmailName
 from gmailautomater.mail.Label import Label
 from gmailautomater.email_utils.mail import connect_to_mail
@@ -99,8 +100,10 @@ def check_email_for_move(email: Email, label_email_list: list[EmailName]):
     return email.sender in label_email_list
 
 
-def move_email_to_label(mail: IMAP4_SSL, e: Email, label: Label):
+def move_email_to_label(e: Email, label: Label):
     """Move email from main inbox to a label."""
+    mail = connect_to_mail()
+    mail.select(DEFAULT_LABEL)
 
     _, email_data = mail.fetch(e.id, "(RFC822)")
     raw_email = email_data[0][1]
@@ -117,7 +120,8 @@ def move_email_to_label(mail: IMAP4_SSL, e: Email, label: Label):
 
     # Remove the "Inbox" label
     if e.sender == sender:
-        mail.store(e.id, "+X-GM-LABELS", label)
+        res = mail.store(e.id, "+X-GM-LABELS", label)
+        print(f"RES: {res}")
         sleep(
             1
         )  # Fix weird error where the server wouldn't update and it would move the wrong id

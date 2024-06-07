@@ -3,7 +3,7 @@ import re
 import email
 import logging
 import threading
-from typing import Union, Optional, cast
+from typing import Any, Union, Optional, cast
 from imaplib import IMAP4_SSL
 from collections import defaultdict
 from email.header import decode_header
@@ -44,20 +44,36 @@ def organize_inbox(mail: IMAP4_SSL, emails: list[Email]) -> None:
         pc = 0
         MAX_WORKERS = 8
 
-        for e, label in label_map.items():
-            if not (email_map.get(e)):
-                continue
+        label_map_items = list(label_map.items())
+        batched_label_map_items = split_list(label_map_items, MAX_WORKERS)
 
-            print(f"EMAIL: {e}")
-            if label == "delete":
+        def mark(items: list[tuple[str, Label]]):
+            # print(f"ITEMS: {items}")
+            for e, label in items:
+                if not (email_map.get(e)):
+                    continue
+
+                if label == "delete":
+                    for e in email_map[e]:
+                        mark_email_for_deletion(e)
+                        continue
+
                 for e in email_map[e]:
-                    mark_email_for_deletion(mail, e)
-            else:
-                LOG.debug(f"Moved email: {e}")
-                for e in email_map[e]:
-                    move_email_to_label(mail, e, label)
-            pc += 1
-            progress.update(task, completed=pc)
+                    move_email_to_label(e, label)
+
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures: set[Future[Any]] = set()
+
+            for batch in batched_label_map_items:
+                future = executor.submit(mark, batch)
+                futures.add(future)
+
+            for future in as_completed(futures):
+                result = future.result()
+                LOG.debug(result)
+
+                pc += 1
+                progress.update(task, completed=pc)
 
 
 def decode_email_from(header: bytes) -> str:
@@ -153,7 +169,7 @@ def get_emails(
         pc = 0
 
         WORKER_COUNT = 8
-        batched_email_id_list = split_list(email_id_list[::-1][:], WORKER_COUNT)
+        batched_email_id_list = split_list(email_id_list[::-1][:1000], WORKER_COUNT)
 
         with ThreadPoolExecutor(max_workers=WORKER_COUNT) as executor:
             futures: set[Future[list[Email]]] = set()

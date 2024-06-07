@@ -3,6 +3,9 @@ import sqlite3
 from typing import Any, Generic, TypeVar, Optional, Generator
 from contextlib import contextmanager
 
+# LOCAL
+from gmailautomater.mail.Label import Label
+
 T = TypeVar("T")
 
 
@@ -35,3 +38,6 @@ def split_list(lst: list[Any], n: int) -> list[list[Any]]:
     """Splits a list into n smaller sublists using a list comprehension."""
     k, m = divmod(len(lst), n)
     return [lst[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n)]
+
+
+DEFAULT_LABEL = Label('"[Gmail]/All Mail"')

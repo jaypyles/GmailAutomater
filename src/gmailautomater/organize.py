@@ -9,7 +9,7 @@ from datetime import datetime
 from gmailautomater.email_utils.utils import get_emails, organize_inbox
 from gmailautomater.sqlite.DatabaseFunctions import get_last_checked
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 LOG = logging.getLogger()
 
 ALL_QUERY = 'X-GM-LABELS "inbox" SEEN NOT FLAGGED'
