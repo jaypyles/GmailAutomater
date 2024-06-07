@@ -3,7 +3,7 @@ import re
 import email
 import logging
 import threading
-from typing import Any, Union, Optional, TypedDict, NamedTuple, cast
+from typing import Any, Union, Optional, TypedDict, cast
 from imaplib import IMAP4_SSL
 from collections import defaultdict
 from email.header import decode_header

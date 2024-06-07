@@ -4,7 +4,7 @@ import email as emaillib
 import imaplib
 import logging
 from time import sleep
-from typing import cast
+from typing import Union, cast
 
 # LOCAL
 from gmailautomater.utils import DEFAULT_LABEL
@@ -102,10 +102,11 @@ def check_email_for_move(email: Email, label_email_list: list[EmailName]):
 def move_email_to_label(e: Email, label: Label):
     """Move email from main inbox to a label."""
     mail = connect_to_mail()
-    mail.select(DEFAULT_LABEL)
+    _ = mail.select(DEFAULT_LABEL)
 
-    _, email_data = mail.fetch(e.id, "(RFC822)")
-    raw_email = email_data[0][1]
+    _, email_data = mail.fetch(e.id, "(RFC822)")  # type: ignore [wrong]
+    raw_email = email_data[0][1]  # type: ignore [wrong]
+    raw_email = cast(Union[int, bytes], raw_email)
 
     if isinstance(raw_email, bytes):
         msg = emaillib.message_from_bytes(raw_email)
@@ -119,15 +120,12 @@ def move_email_to_label(e: Email, label: Label):
 
     # Remove the "Inbox" label
     if e.sender == sender:
-        res = mail.store(e.id, "+X-GM-LABELS", label)
-        print(f"RES: {res}")
-        sleep(
-            1
-        )  # Fix weird error where the server wouldn't update and it would move the wrong id
-        mail.store(e.id, "-X-GM-LABELS", "\\Inbox")
-        mail.expunge()
-    else:
-        pass
+        _ = mail.store(e.id, "+X-GM-LABELS", label)  # type: ignore [wrongType]
+        sleep(1)
+
+        # Fix weird error where the server wouldn't update and it would move the wrong id
+        _ = mail.store(e.id, "-X-GM-LABELS", "\\Inbox")  # type: ignore [wrongType]
+        _ = mail.expunge()
 
 
 def build_label_map(labels: list[Label]):
@@ -147,52 +145,3 @@ class TrieLabelNode:
     def __init__(self) -> None:
         self.children = {}
         self.label = None
-
-
-def build_email_label_trie(label_map: dict):
-    """Build a trie where each node is a char of an email, with the final node having a `label` attribute."""
-    root = TrieLabelNode()
-    for label, addresses in label_map.items():
-        for address in addresses:
-            node = root
-            components = address.split("@")
-            local = components[0]
-            domain = components[1]
-            for char in local:
-                if char not in node.children:
-                    node.children[char] = TrieLabelNode()
-                node = node.children[char]
-            if domain not in node.children:
-                node.children[domain] = TrieLabelNode()
-            node = node.children[domain]
-            node.label = label
-    return root
-
-
-def categorize_emails(
-    emails: list[Email],
-    labels: list[Label],
-    label_map: dict[EmailName, Label],
-):
-    """Categorize a list of emails based on a trie."""
-    categorized_emails: dict[Label, list[Email]] = {label: list() for label in labels}
-
-    for email in emails:
-        if email.sender:
-            components = email.sender.split("@")
-            local = components[0]
-            domain = components[1]
-            node = trie
-
-            for char in local:
-                if char not in node.children:
-                    break
-
-                node = node.children[char]
-                if domain in node.children:
-                    node = node.children[domain]
-
-                    if node.label:
-                        categorized_emails[node.label].append(email)
-
-    return categorized_emails

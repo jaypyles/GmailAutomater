@@ -107,7 +107,7 @@ def get_last_checked():
         return rows[0][0]
 
 
-def insert_last_checked(date):
+def insert_last_checked(date: str) -> None:
     """Insert the date of the last checked email."""
     conn = connect_to_db()
     query = f"""
