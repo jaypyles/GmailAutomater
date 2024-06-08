@@ -9,10 +9,10 @@ from datetime import datetime
 from gmailautomater.email_utils.utils import get_emails, organize_inbox
 from gmailautomater.sqlite.DatabaseFunctions import get_last_checked
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 LOG = logging.getLogger()
 
-ALL_QUERY = 'X-GM-LABELS "inbox" SEEN NOT FLAGGED'
+ALL_QUERY = 'X-GM-LABELS "inbox" NOT FLAGGED'
 
 
 def organize_mail(all: bool):
@@ -25,7 +25,7 @@ def organize_mail(all: bool):
         today = datetime.now().strftime("%d-%b-%Y")
 
         if last_checked:
-            query = f'X-GM-LABELS "inbox" SEEN NOT FLAGGED SINCE {last_checked} BEFORE {today}'
+            query = f'X-GM-LABELS "inbox" SINCE {last_checked} BEFORE {today}'
 
     EMAIL, PASSWORD = os.getenv("USER_EMAIL"), os.getenv("APP_PASSWORD")
 
@@ -34,7 +34,7 @@ def organize_mail(all: bool):
 
     _ = mail.login(EMAIL, PASSWORD)
 
-    _ = mail.select('"[Gmail]/All Mail"')
+    _ = mail.select('"[Gmail]/All Mail"', readonly=True)
 
     _, email_ids = mail.search(None, query)
     email_ids = cast(list[bytes], email_ids)

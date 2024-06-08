@@ -190,7 +190,7 @@ def retrieve_labels_from_db():
 
 def retrieve_emails_from_db(label: Label) -> list[EmailName]:
     """Retrieve a list of email names from a table in the db."""
-    conn = sqlite3.connect("sqlite-db/data/gmail.db")
+    conn = sqlite3.connect(DATABASE_PATH)
 
     query = f"""
     SELECT e.domain

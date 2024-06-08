@@ -104,7 +104,7 @@ def move_email_to_label(e: Email, label: Label):
     mail = connect_to_mail()
     _ = mail.select(DEFAULT_LABEL)
 
-    _, email_data = mail.fetch(e.id, "(RFC822)")  # type: ignore [wrong]
+    _, email_data = mail.fetch(e.id, "(BODY.PEEK[])")  # type: ignore [wrong]
     raw_email = email_data[0][1]  # type: ignore [wrong]
     raw_email = cast(Union[int, bytes], raw_email)
 

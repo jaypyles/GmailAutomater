@@ -140,7 +140,7 @@ def get_and_transform_emails(label: Label, email_id_list: list[bytes]) -> list[E
         _ = mail.select(label)
 
     for email_id in email_id_list[::-1]:
-        _, email_data = mail.fetch(email_id, "(RFC822)")  # type: ignore [this is just wrong]
+        _, email_data = mail.fetch(email_id, "(BODY.PEEK[])")  # type: ignore [this is just wrong]
         email_response: tuple[bytes, bytes] = email_data[0]  # type: ignore[reportAssignmentType]
 
         raw_email: bytes = email_response[1]
@@ -197,7 +197,7 @@ def get_emails(
     emails: list[Email] = list()
 
     WORKER_COUNT = 8
-    batched_email_id_list = split_list(email_id_list[::-1][:], WORKER_COUNT)
+    batched_email_id_list = split_list(email_id_list[::-1][:50], WORKER_COUNT)
 
     with Progress() as progress:
         task = progress.add_task(
