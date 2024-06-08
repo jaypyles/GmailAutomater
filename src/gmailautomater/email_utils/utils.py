@@ -66,6 +66,7 @@ def organize_inbox(emails: list[Email]) -> None:
 
                 if label == "delete":
                     for e in email_map[e]:
+                        LOG.debug(f"DELETING EMAIL: {e}")
                         mark_email_for_deletion(e)
                         email_count += 1
                         continue

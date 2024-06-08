@@ -25,7 +25,9 @@ def organize_mail(all: bool):
         today = datetime.now().strftime("%d-%b-%Y")
 
         if last_checked:
-            query = f'X-GM-LABELS "inbox" SINCE {last_checked} BEFORE {today}'
+            query = (
+                f'X-GM-LABELS "inbox" NOT FLAGGED SINCE {last_checked} BEFORE {today}'
+            )
 
     EMAIL, PASSWORD = os.getenv("USER_EMAIL"), os.getenv("APP_PASSWORD")
 
