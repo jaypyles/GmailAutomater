@@ -55,7 +55,7 @@ pipx install dist/gmailautomater-...-py3.none.whl
 
 ### Example Commands
 
-    Organize Emails
+Organize Emails
 
 ```sh
 gmailautomater organize --all
