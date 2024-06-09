@@ -18,8 +18,8 @@ Features
 Clone the repository:
 
 ```sh
-git clone <repository-url>
-cd <repository-directory>
+git clone https://github.com/jaypyles/GmailAutomater
+cd GmailAutomater
 ```
 
 Install dependencies using PDM:
