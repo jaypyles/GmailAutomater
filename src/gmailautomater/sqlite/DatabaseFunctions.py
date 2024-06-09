@@ -3,7 +3,6 @@ import os
 import uuid
 import logging
 import sqlite3
-import subprocess
 from sqlite3 import Connection
 
 # LOCAL
@@ -26,17 +25,12 @@ def initialize_db() -> bool:
 
     try:
         os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
-        create_db = f"sqlite3 {DATABASE_PATH} < sqlite-db/data/gmail.sql"
-        _ = subprocess.run(
-            create_db,
-            shell=True,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+
+        with open(os.path.join(DATABASE_PATH), "w"):
+            pass
 
         conn = connect_to_db()
+
         queries = [
             "CREATE TABLE IF NOT EXISTS last_checked (id INTEGER PRIMARY KEY, check_date TEXT);",
             "CREATE TABLE IF NOT EXISTS label (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);",
@@ -55,12 +49,12 @@ def initialize_db() -> bool:
         for query in queries:
             execute_db(conn, query)
 
+        conn.close()
+
         return True
-    except subprocess.CalledProcessError as e:
+
+    except Exception as e:
         LOG.error(f"ERROR: {e}")
-        LOG.error(
-            f"Command failed with exit code {e.returncode}, ensure you have sqlite3."
-        )
         return False
 
 
@@ -84,7 +78,6 @@ def execute_db(conn: Connection, query: str):
     cursor = conn.cursor()
     _ = cursor.execute(query)
     conn.commit()
-    conn.close()
 
 
 def get_last_checked():
@@ -109,6 +102,8 @@ def insert_last_checked(date: str) -> None:
     VALUES (1, '{date}');
     """
     execute_db(conn, query)
+
+    conn.close()
 
 
 def remove_label_from_labels(label: str):
