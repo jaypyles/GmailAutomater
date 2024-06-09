@@ -197,7 +197,7 @@ def get_emails(
     emails: list[Email] = list()
 
     WORKER_COUNT = 8
-    batched_email_id_list = split_list(email_id_list[::-1][:50], WORKER_COUNT)
+    batched_email_id_list = split_list(email_id_list[::-1][:], WORKER_COUNT)
 
     with Progress() as progress:
         task = progress.add_task(
