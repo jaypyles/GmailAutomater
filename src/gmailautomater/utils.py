@@ -1,7 +1,8 @@
 # STL
 import sqlite3
-from typing import Any, Generic, TypeVar, Optional, Generator
+from typing import Any, Generic, TypeVar, Optional  # type: ignore [reportAny]
 from contextlib import contextmanager
+from collections.abc import Generator
 
 # LOCAL
 from gmailautomater.mail.Label import Label

@@ -10,7 +10,6 @@ from gmailautomater.organize import organize_mail
 from gmailautomater.mail.Label import Label
 from gmailautomater.email_utils.mail import connect_to_mail
 from gmailautomater.email_utils.login import create_env, store_email, store_app_password
-from gmailautomater.email_utils.utils import find_top_emails
 from gmailautomater.email_utils.labels import (
     get_labels,
     add_label_to_email,
@@ -36,7 +35,7 @@ def email():
 @email.command()
 @click.option("--all", is_flag=True)
 def organize(all: bool):
-    """Run the organize_inbox command."""
+    """Organize emails."""
     organize_mail(all=all)
 
 
@@ -103,7 +102,6 @@ def delete_email(email: str):
     """Add an email to be deleted when organized."""
     _ = add_email_to_label(Label("delete"), email)
     print(f"[bold green]Email: {email}, set to be deleted.")
-    return
 
 
 @email.command()
@@ -128,19 +126,9 @@ def sync():
 
 
 @email.command()
-def top_emails():
-    """Find what email senders have sent the most emails."""
-    if top := find_top_emails():
-        count = 0
-        for key, value in top.items():
-            print(f"{key}: {value}")
-            count += 1
-            if count == 20:
-                break
-
-
-@email.command()
 def list_labels():
     """List all currently stored labels"""
-    mail = connect_to_mail()
-    get_labels(mail)
+    labels = retrieve_labels_from_db()
+
+    for label in labels:
+        print(f"[bold green]\U0001F3F7 {label}[/bold green]")

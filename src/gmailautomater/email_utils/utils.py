@@ -3,7 +3,7 @@ import re
 import email
 import logging
 import threading
-from typing import Any, Union, Optional, TypedDict, cast
+from typing import Any, Union, Optional, TypedDict, cast  # type: ignore [reportAny]
 from imaplib import IMAP4_SSL
 from collections import defaultdict
 from email.header import decode_header
@@ -65,15 +65,14 @@ def organize_inbox(emails: list[Email]) -> None:
                     continue
 
                 if label == "delete":
-                    for e in email_map[e]:
-                        LOG.debug(f"DELETING EMAIL: {e}")
-                        mark_email_for_deletion(e)
+                    for _email in email_map[e]:
+                        mark_email_for_deletion(_email)
                         email_count += 1
                         continue
 
-                for e in email_map[e]:
+                for _email in email_map[e]:
+                    move_email_to_label(_email, label)
                     email_count += 1
-                    move_email_to_label(e, label)
 
             result["result"] = email_count
             return result
@@ -198,7 +197,7 @@ def get_emails(
     emails: list[Email] = list()
 
     WORKER_COUNT = 8
-    batched_email_id_list = split_list(email_id_list[::-1][:], WORKER_COUNT)
+    batched_email_id_list = split_list(email_id_list[::-1][:50], WORKER_COUNT)
 
     with Progress() as progress:
         task = progress.add_task(
@@ -239,17 +238,3 @@ def get_inbox_emails(mail: IMAP4_SSL) -> list[Email]:
 
     email_id_list: list[bytes] = email_ids[0].split()
     return get_emails(email_id_list, all=True)
-
-
-def find_top_emails():
-    email_count = {}
-    if mail := connect_to_mail():
-        emails = get_inbox_emails(mail)
-        for e in emails:
-            if e.sender not in email_count:
-                email_count[e.sender] = 1
-            else:
-                count = email_count[e.sender]
-                email_count[e.sender] = count + 1
-
-    return dict(reversed(sorted(email_count.items(), key=lambda item: item[1])))

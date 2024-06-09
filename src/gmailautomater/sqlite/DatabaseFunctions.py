@@ -82,7 +82,7 @@ def query_db(conn: Connection, query: str):
 def execute_db(conn: Connection, query: str):
     """Execute a command in the db."""
     cursor = conn.cursor()
-    cursor.execute(query)
+    _ = cursor.execute(query)
     conn.commit()
     conn.close()
 
@@ -90,14 +90,15 @@ def execute_db(conn: Connection, query: str):
 def get_last_checked():
     """Get the date of the last checked email."""
     conn = connect_to_db()
-    query = f"""
+    query = """
     SELECT check_date FROM last_checked;
     """
     rows = query_db(conn, query)
+
     if len(rows) == 0:
         return None
-    else:
-        return rows[0][0]
+
+    return rows[0][0]
 
 
 def insert_last_checked(date: str) -> None:
@@ -180,11 +181,11 @@ def add_label_to_db(label: Label) -> str:
     return label_id
 
 
-def retrieve_labels_from_db():
+def retrieve_labels_from_db() -> list[Label]:
     """Retrieve a list of label names from the db."""
     conn = connect_to_db()
     query = "SELECT name FROM label;"
-    rows = query_db(conn, query)
+    rows: list[tuple[Label]] = query_db(conn, query)
     return [row[0] for row in rows]
 
 
@@ -202,20 +203,3 @@ def retrieve_emails_from_db(label: Label) -> list[EmailName]:
 
     rows: list[tuple[EmailName]] = query_db(conn, query)
     return [email[0] for email in rows]
-
-
-def insert_email_into_database(email: str):
-    """Attempt to insert an email into the database."""
-    conn = sqlite3.connect("sqlite-db/data/gmail.db")
-    cursor = conn.cursor()
-
-    try:
-        insert_query = f"INSERT INTO keep_emails(sender) VALUES (?)"
-        cursor.execute(insert_query, (email,))
-        conn.commit()
-        LOG.info(f"Email '{email}' inserted into the database.")
-    except sqlite3.IntegrityError:
-        LOG.info(f"Email '{email}' already exists in the database. Skipping insertion.")
-
-    cursor.close()
-    conn.close()
