@@ -3,7 +3,8 @@
 ## Overview
 
 Gmail Automater is a tool designed to help you organize and manage your Gmail inbox efficiently. This CLI-based tool allows you to set up labels, add emails to specific labels, delete emails, and sync your Gmail labels with a local database.
-Features
+
+Features:
 
     Organize emails with specific labels
     Set and store email credentials securely
