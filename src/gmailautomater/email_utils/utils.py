@@ -139,7 +139,7 @@ def get_and_transform_emails(label: Label, email_id_list: list[bytes]) -> list[E
         mail = connect_to_mail()
         _ = mail.select(label)
 
-    for email_id in email_id_list[::-1]:
+    for email_id in email_id_list:
         _, email_data = mail.fetch(email_id, "(BODY.PEEK[])")  # type: ignore [this is just wrong]
         email_response: tuple[bytes, bytes] = email_data[0]  # type: ignore[reportAssignmentType]
 
